@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <style>
+        h1 {
+            color: #111;
+            font-family: 'Open Sans Condensed', sans-serif;
+            font-size: 64px;
+            font-weight: 700;
+            line-height: 64px;
+            padding: 20px 30px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        a {
+            color: #CCFFFF;
+        }
+
+        .news-post {
+            width: 48%;
+            height: 400px;
+            margin: 5px 1%;
+            position: relative;
+            float: left;
+            border-radius: 5px;
+            background-size: cover;
+        }
+
+        .news-title {
+            background: #FFFFFF;
+            opacity: 0.7;
+            font-weight: bold;
+            font-size: 28px;
+        }
+
+        .news-description {
+            display: none;
+            color: #FFFFFF;
+            text-shadow: 1px 1px 2px black;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 24px;
+        }
+
+        @media (max-width: 1000px) {
+            .news-post {
+                width: 100%;
+                margin-bottom: 10px;
+                font-size: 24px;
+            }
+
+            .news-title {
+                font-size: 30px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="header" class="jumbotron"><h1>Meet the latest news from Yahoo!</h1></div>
+    <div class="all-news col-lg-12"></div>
+</div>
+
+<script>
+    window.addEventListener('load', function () {
+        getData("http://pipes.yahoo.com/pipes/pipe.run?_id=e9a2e77dffb3205d035c4e311d77bbe6&_render=json", generateContent);
+    }, false);
+
+    function getData(url, callback) {
+        var request = new XMLHttpRequest();
+        request.onreadystatechange = function () {
+            if (request.readyState == 4) {
+                if (request.status == 200) {
+                    var response = JSON.parse(request.responseText);
+                    callback(response);
+                } else {
+                    handleError(request.status);
+                }
+            }
+        };
+        request.open("GET", url);
+        request.send();
+    }
+
+    function generateContent(data) {
+        var count = data.count;
+        var nodeElement = document.getElementsByClassName('all-news')[0];
+        for (i = 0; i < count; i++) {
+            var title = data.value.items[i].title,
+                    description = data.value.items[i].description,
+                    link = data.value.items[i].link,
+                    imageUrl = data.value.items[i].enclosure.url;
+            createNewsPost(nodeElement, i + 1, title, description, link, imageUrl);
+        }
+    }
+
+    function handleError(requestStatus) {
+        //in general case handle different statuses
+        var headerObj = document.getElementById('header').getElementsByTagName("h1")[0];
+        headerObj.textContent = "Ooops...Something went wrong.";
+    }
+
+    function showDescription(id) {
+        var clickedElement = document.getElementById(id);
+        //getting description of clicked element
+        var elemDescription = clickedElement.getElementsByClassName('news-description')[0];
+        //check the display value, if it is hidden - show it, otherwise - hide it
+        if (elemDescription.style.display === 'none') {
+            elemDescription.style.display = 'block';
+        } else {
+            elemDescription.style.display = 'none';
+        }
+
+    }
+
+    function createNewsPost(nodeElement, elementId, title, description, link, imageUrl) {
+        //generate news block
+        var newsPost = document.createElement('div');
+        nodeElement.appendChild(newsPost);
+        newsPost.setAttribute('class', 'news-post');
+        newsPost.setAttribute('id', elementId);
+        var style = 'background-image: url(' + imageUrl + ');';
+        newsPost.setAttribute('style', style);
+        newsPost.addEventListener('click', function () {
+            showDescription(this.id);
+        });
+
+        //generate news title
+        var newsTitle = document.createElement('div');
+        newsTitle.setAttribute('class', 'news-title');
+        newsTitle.textContent = title;
+
+        //add title to news post
+        newsPost.appendChild(newsTitle);
+
+        //generate news description
+        var newsDescription = document.createElement('div');
+        newsDescription.setAttribute('class', 'news-description');
+        newsDescription.textContent = description;
+
+        //add link to the description
+        var newsLink = document.createElement('a');
+        newsDescription.appendChild(newsLink);
+        newsLink.setAttribute('href', link);
+        newsLink.setAttribute('target', '_blank');
+        newsLink.textContent = 'More...';
+
+        //add description to news post
+        newsPost.appendChild(newsDescription);
+
+        //add news post to node element
+        nodeElement.appendChild(newsPost);
+    }
+</script>
+</body>
+</html>
