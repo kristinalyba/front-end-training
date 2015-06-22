@@ -64,24 +64,18 @@
 </div>
 
 <script>
-    window.addEventListener('load', function () {
-        getData("http://pipes.yahoo.com/pipes/pipe.run?_id=e9a2e77dffb3205d035c4e311d77bbe6&_render=json", generateContent);
-    }, false);
+    scriptRequest("http://pipes.yahoo.com/pipes/pipe.run?_id=e9a2e77dffb3205d035c4e311d77bbe6&_render=json", "generateContent");
 
-    function getData(url, callback) {
-        var request = new XMLHttpRequest();
-        request.onreadystatechange = function () {
-            if (request.readyState == 4) {
-                if (request.status == 200) {
-                    var response = JSON.parse(request.responseText);
-                    callback(response);
-                } else {
-                    handleError(request.status);
-                }
-            }
+    function scriptRequest(url, callback) {
+        var scriptElem = document.createElement("script");
+        scriptElem.src = url + (url.indexOf('?') + 1 ? '&' : '?') + '_callback=' + callback;
+        scriptElem.onload = function () {
+            this.remove();
         };
-        request.open("GET", url);
-        request.send();
+        scriptElem.onerror = function () {
+            handleError();
+        };
+        document.head.appendChild(scriptElem);
     }
 
     function generateContent(data) {
@@ -96,8 +90,7 @@
         }
     }
 
-    function handleError(requestStatus) {
-        //in general case handle different statuses
+    function handleError() {
         var headerObj = document.getElementById('header').getElementsByTagName("h1")[0];
         headerObj.textContent = "Ooops...Something went wrong.";
     }
